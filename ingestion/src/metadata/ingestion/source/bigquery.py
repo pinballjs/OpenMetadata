@@ -56,7 +56,7 @@ class BigquerySource(SQLSource):
         return TableData(columns=cols, rows=rows)
 
     def standardize_schema_table_names(
-        self, schema: str, table: str
+            self, schema: str, table: str
     ) -> Tuple[str, str]:
         segments = table.split(".")
         if len(segments) != 2:

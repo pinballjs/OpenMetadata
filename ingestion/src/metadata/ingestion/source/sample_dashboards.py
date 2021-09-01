@@ -22,7 +22,8 @@ from typing import Iterable, List
 from pydantic import ValidationError
 
 from metadata.config.common import ConfigModel
-from metadata.generated.schema.api.services.createDashboardService import CreateDashboardServiceEntityRequest
+from metadata.generated.schema.api.services.createDashboardService import \
+    CreateDashboardServiceEntityRequest
 from metadata.generated.schema.entity.services.dashboardService import DashboardService
 from metadata.generated.schema.type.entityReference import EntityReference
 from metadata.ingestion.api.common import Record
@@ -30,8 +31,8 @@ from metadata.ingestion.api.source import SourceStatus, Source
 from metadata.ingestion.models.table_metadata import Chart, Dashboard
 from metadata.ingestion.ometa.openmetadata_rest import OpenMetadataAPIClient, MetadataServerConfig
 
-
 logger = logging.getLogger(__name__)
+
 
 def get_service_or_create(service_json, metadata_config) -> DashboardService:
     client = OpenMetadataAPIClient(metadata_config)
@@ -39,7 +40,9 @@ def get_service_or_create(service_json, metadata_config) -> DashboardService:
     if service is not None:
         return service
     else:
-        created_service = client.create_dashboard_service(CreateDashboardServiceEntityRequest(**service_json))
+        created_service = client.create_dashboard_service(
+            CreateDashboardServiceEntityRequest(**service_json)
+            )
         return created_service
 
 
@@ -62,7 +65,9 @@ class SampleDashboardSourceStatus(SourceStatus):
 
 class SampleDashboardsSource(Source):
 
-    def __init__(self, config: SampleDashboardSourceConfig, metadata_config: MetadataServerConfig, ctx):
+    def __init__(
+            self, config: SampleDashboardSourceConfig, metadata_config: MetadataServerConfig, ctx
+            ):
         super().__init__(ctx)
         self.status = SampleDashboardSourceStatus()
         self.config = config
@@ -85,24 +90,27 @@ class SampleDashboardsSource(Source):
     def next_record(self) -> Iterable[Record]:
         for chart in self.charts['charts']:
             try:
-                chart_ev = Chart(name=chart['name'],
-                                displayName=chart['displayName'],
-                                description=chart['description'],
-                                chart_type=chart['chartType'],
-                                url=chart['chartUrl'],
-                                service=EntityReference(id=self.service.id, type="dashboardService"))
+                chart_ev = Chart(
+                    name=chart['name'],
+                    displayName=chart['displayName'],
+                    description=chart['description'],
+                    chart_type=chart['chartType'],
+                    url=chart['chartUrl'],
+                    service=EntityReference(id=self.service.id, type="dashboardService")
+                    )
                 yield chart_ev
             except ValidationError as err:
                 logger.error(err)
 
-
         for dashboard in self.dashboards['dashboards']:
-            dashboard_ev = Dashboard(name=dashboard['name'],
-                                     displayName=dashboard['displayName'],
-                                     description=dashboard['description'],
-                                     url=dashboard['dashboardUrl'],
-                                     charts=dashboard['charts'],
-                                     service=EntityReference(id=self.service.id, type="dashboardService"))
+            dashboard_ev = Dashboard(
+                name=dashboard['name'],
+                displayName=dashboard['displayName'],
+                description=dashboard['description'],
+                url=dashboard['dashboardUrl'],
+                charts=dashboard['charts'],
+                service=EntityReference(id=self.service.id, type="dashboardService")
+                )
             yield dashboard_ev
 
     def close(self):

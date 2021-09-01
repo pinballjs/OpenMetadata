@@ -28,8 +28,6 @@ class MssqlConfig(SQLConnectionConfig):
     def get_connection_url(self):
         return super().get_connection_url()
 
-    
-
 
 class MssqlSource(SQLSource):
     def __init__(self, config, metadata_config, ctx):

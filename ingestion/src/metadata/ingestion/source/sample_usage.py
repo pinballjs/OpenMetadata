@@ -1,15 +1,14 @@
+from datetime import datetime
 import json
 import csv
-from metadata.ingestion.api.source import Source
-from .sample_tables import SampleTableSourceConfig, SampleTableSourceStatus, get_service_or_create
-from metadata.ingestion.models.table_queries import TableQuery
 from typing import Iterable
-from datetime import datetime
+from metadata.ingestion.api.source import Source
+from metadata.ingestion.models.table_queries import TableQuery
+from .sample_tables import SampleTableSourceConfig, SampleTableSourceStatus, get_service_or_create
 from ..ometa.openmetadata_rest import OpenMetadataAPIClient, MetadataServerConfig
 
 
 class SampleUsageSource(Source):
-
     service_type = 'BigQuery'
 
     def __init__(self, config: SampleTableSourceConfig, metadata_config: MetadataServerConfig, ctx):
@@ -35,9 +34,11 @@ class SampleUsageSource(Source):
 
     def next_record(self) -> Iterable[TableQuery]:
         for row in self.query_logs:
-            tq = TableQuery(row['query'], '', 100, 0, 0, '',
-                            '', datetime.today().strftime('%Y-%m-%d %H:%M:%S'), 100, 'shopify',
-                            False, row['query'])
+            tq = TableQuery(
+                row['query'], '', 100, 0, 0, '',
+                '', datetime.today().strftime('%Y-%m-%d %H:%M:%S'), 100, 'shopify',
+                False, row['query']
+                )
             yield tq
 
     def close(self):

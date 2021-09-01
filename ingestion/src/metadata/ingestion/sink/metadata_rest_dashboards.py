@@ -51,12 +51,15 @@ om_chart_type_dict = {
     "box_plot": ChartType.Bar
 }
 
+
 class MetadataRestDashboardsSink(Sink):
     config: MetadataDashboardsSinkConfig
     status: SinkStatus
 
-    def __init__(self, ctx: WorkflowContext, config: MetadataDashboardsSinkConfig,
-                 metadata_config: MetadataServerConfig):
+    def __init__(
+            self, ctx: WorkflowContext, config: MetadataDashboardsSinkConfig,
+            metadata_config: MetadataServerConfig
+            ):
         super().__init__(ctx)
         self.config = config
         self.metadata_config = metadata_config
@@ -96,12 +99,15 @@ class MetadataRestDashboardsSink(Sink):
             created_chart = self.client.create_or_update_chart(chart_request)
             self.charts_dict[chart.name] = EntityReference(id=created_chart.id, type='chart')
             logger.info(
-                'Successfully ingested {}'.format(created_chart.displayName))
+                'Successfully ingested {}'.format(created_chart.displayName)
+            )
             self.status.records_written(
-                '{}'.format(created_chart.displayName))
+                '{}'.format(created_chart.displayName)
+            )
         except (APIError, ValidationError) as err:
             logger.error(
-                "Failed to ingest chart {}".format(chart.displayName))
+                "Failed to ingest chart {}".format(chart.displayName)
+            )
             logger.error(err)
             self.status.failure(chart.displayName)
 

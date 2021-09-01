@@ -19,7 +19,8 @@ from dataclasses import dataclass, field
 from typing import Iterable, List
 from metadata.config.common import ConfigModel
 from metadata.generated.schema.api.data.createTopic import CreateTopic
-from metadata.generated.schema.api.services.createMessagingService import CreateMessagingServiceEntityRequest
+from metadata.generated.schema.api.services.createMessagingService import \
+    CreateMessagingServiceEntityRequest
 from metadata.generated.schema.entity.services.messagingService import MessagingService
 from metadata.generated.schema.type.entityReference import EntityReference
 from metadata.ingestion.api.source import SourceStatus, Source
@@ -32,7 +33,9 @@ def get_service_or_create(service_json, metadata_config) -> MessagingService:
     if service is not None:
         return service
     else:
-        created_service = client.create_messaging_service(CreateMessagingServiceEntityRequest(**service_json))
+        created_service = client.create_messaging_service(
+            CreateMessagingServiceEntityRequest(**service_json)
+            )
         return created_service
 
 
@@ -55,7 +58,9 @@ class SampleTopicSourceStatus(SourceStatus):
 
 class SampleTopicsSource(Source):
 
-    def __init__(self, config: SampleTopicSourceConfig, metadata_config: MetadataServerConfig, ctx):
+    def __init__(
+            self, config: SampleTopicSourceConfig, metadata_config: MetadataServerConfig, ctx
+            ):
         super().__init__(ctx)
         self.status = SampleTopicSourceStatus()
         self.config = config

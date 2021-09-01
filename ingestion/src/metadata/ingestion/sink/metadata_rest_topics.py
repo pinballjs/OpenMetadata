@@ -21,7 +21,7 @@ from metadata.config.common import ConfigModel
 from metadata.generated.schema.api.data.createTopic import CreateTopic
 from metadata.ingestion.api.common import WorkflowContext
 from metadata.ingestion.api.sink import Sink, SinkStatus
-from metadata.ingestion.ometa.client import  APIError
+from metadata.ingestion.ometa.client import APIError
 from metadata.ingestion.ometa.openmetadata_rest import OpenMetadataAPIClient, MetadataServerConfig
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,10 @@ class MetadataRestTopicsSink(Sink):
     config: MetadataTopicsSinkConfig
     status: SinkStatus
 
-    def __init__(self, ctx: WorkflowContext, config: MetadataTopicsSinkConfig, metadata_config: MetadataServerConfig):
+    def __init__(
+            self, ctx: WorkflowContext, config: MetadataTopicsSinkConfig,
+            metadata_config: MetadataServerConfig
+            ):
         super().__init__(ctx)
         self.config = config
         self.metadata_config = metadata_config
@@ -53,11 +56,13 @@ class MetadataRestTopicsSink(Sink):
         try:
             created_topic = self.rest.create_or_update_topic(topic)
             logger.info(
-                'Successfully ingested {}'.format(created_topic.name.__root__))
+                'Successfully ingested {}'.format(created_topic.name.__root__)
+            )
             self.status.records_written(created_topic)
         except (APIError, ValidationError) as err:
             logger.error(
-                "Failed to ingest topic {} ".format(topic.name.__root__))
+                "Failed to ingest topic {} ".format(topic.name.__root__)
+            )
             logger.error(err)
             self.status.failure(topic.name)
 
