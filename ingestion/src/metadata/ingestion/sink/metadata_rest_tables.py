@@ -41,7 +41,7 @@ class MetadataRestTablesSink(Sink):
     def __init__(
             self, ctx: WorkflowContext, config: MetadataTablesSinkConfig,
             metadata_config: MetadataServerConfig
-            ):
+    ):
         super().__init__(ctx)
         self.config = config
         self.metadata_config = metadata_config
@@ -63,8 +63,8 @@ class MetadataRestTablesSink(Sink):
                 service=EntityReference(
                     id=table_and_db.database.service.id,
                     type="databaseService"
-                    )
                 )
+            )
             db = self.client.create_database(db_request)
             table_request = CreateTableEntityRequest(
                 name=table_and_db.table.name,
@@ -72,21 +72,22 @@ class MetadataRestTablesSink(Sink):
                 columns=table_and_db.table.columns,
                 description=table_and_db.table.description,
                 database=db.id
-                )
+            )
 
-            if table_and_db.table.viewDefinition is not None and table_and_db.table.viewDefinition != "":
+            if table_and_db.table.viewDefinition is not None and \
+                    table_and_db.table.viewDefinition != "":
                 table_request.viewDefinition = table_and_db.table.viewDefinition.__root__
 
             created_table = self.client.create_or_update_table(table_request)
             if table_and_db.table.sampleData is not None:
                 self.client.ingest_sample_data(
                     id=created_table.id, sample_data=table_and_db.table.sampleData
-                    )
+                )
 
             logger.info(
                 'Successfully ingested {}.{}'.format(
                     table_and_db.database.name.__root__, created_table.name.__root__
-                    )
+                )
             )
             self.status.records_written(
                 '{}.{}'.format(table_and_db.database.name.__root__, created_table.name.__root__)
@@ -95,7 +96,7 @@ class MetadataRestTablesSink(Sink):
             logger.error(
                 "Failed to ingest table {} in database {} ".format(
                     table_and_db.table.name.__root__, table_and_db.database.name.__root__
-                    )
+                )
             )
             logger.error(err)
             self.status.failure(table_and_db.table.name.__root__)
