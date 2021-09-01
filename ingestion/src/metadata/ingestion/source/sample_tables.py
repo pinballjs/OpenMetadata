@@ -17,11 +17,12 @@ import csv
 import uuid
 import os
 import json
-from faker import Faker
+import logging
 from collections import namedtuple
 from dataclasses import dataclass, field
-import pandas as pd
 from typing import Iterable, List, Dict, Any, Union
+import pandas as pd
+from faker import Faker
 from metadata.config.common import ConfigModel
 from metadata.generated.schema.entity.data.table import Table
 from metadata.generated.schema.entity.data.database import Database
@@ -33,7 +34,6 @@ from metadata.generated.schema.api.services.createDatabaseService import \
     CreateDatabaseServiceEntityRequest
 from metadata.generated.schema.entity.services.databaseService import DatabaseService
 from metadata.ingestion.ometa.openmetadata_rest import OpenMetadataAPIClient
-import logging
 
 logger: logging.Logger = logging.getLogger(__name__)
 
