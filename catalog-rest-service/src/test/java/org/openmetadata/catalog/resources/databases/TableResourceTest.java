@@ -27,17 +27,22 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.openmetadata.catalog.CatalogApplicationTest;
 import org.openmetadata.catalog.Entity;
 import org.openmetadata.catalog.api.data.CreateDatabase;
+import org.openmetadata.catalog.api.data.CreateLocation;
 import org.openmetadata.catalog.api.data.CreateTable;
 import org.openmetadata.catalog.api.services.CreateDatabaseService;
 import org.openmetadata.catalog.api.services.CreateDatabaseService.DatabaseServiceType;
+import org.openmetadata.catalog.api.services.CreateStorageService;
 import org.openmetadata.catalog.entity.data.Database;
+import org.openmetadata.catalog.entity.data.Location;
 import org.openmetadata.catalog.entity.data.Table;
 import org.openmetadata.catalog.entity.services.DatabaseService;
+import org.openmetadata.catalog.entity.services.StorageService;
 import org.openmetadata.catalog.entity.teams.Team;
 import org.openmetadata.catalog.entity.teams.User;
 import org.openmetadata.catalog.exception.CatalogExceptionMessage;
 import org.openmetadata.catalog.resources.databases.TableResource.TableList;
 import org.openmetadata.catalog.resources.services.DatabaseServiceResourceTest;
+import org.openmetadata.catalog.resources.services.StorageServiceResourceTest;
 import org.openmetadata.catalog.resources.tags.TagResourceTest;
 import org.openmetadata.catalog.resources.teams.TeamResourceTest;
 import org.openmetadata.catalog.resources.teams.UserResourceTest;
@@ -55,6 +60,7 @@ import org.openmetadata.catalog.type.TableJoins;
 import org.openmetadata.catalog.type.TableProfile;
 import org.openmetadata.catalog.type.TableType;
 import org.openmetadata.catalog.type.TagLabel;
+import org.openmetadata.catalog.util.EntityUtil;
 import org.openmetadata.catalog.util.EntityUtil.Fields;
 import org.openmetadata.catalog.util.JsonUtils;
 import org.openmetadata.catalog.util.RestUtil;
@@ -91,6 +97,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openmetadata.catalog.resources.databases.DatabaseResourceTest.createAndCheckDatabase;
+import static org.openmetadata.catalog.resources.locations.LocationResourceTest.createLocation;
+import static org.openmetadata.catalog.resources.locations.LocationResourceTest.getLocationName;
 import static org.openmetadata.catalog.resources.services.DatabaseServiceResourceTest.createService;
 import static org.openmetadata.catalog.type.ColumnDataType.ARRAY;
 import static org.openmetadata.catalog.type.ColumnDataType.BIGINT;
@@ -1068,6 +1076,44 @@ public class TableResourceTest extends CatalogApplicationTest {
     // Delete followers and make sure they are deleted
     deleteAndCheckFollower(table, user1.getId(), 1, userAuthHeaders());
     deleteAndCheckFollower(table, user2.getId(), 0, userAuthHeaders());
+  }
+
+  @Test
+  public void put_addDeleteLocation_200(TestInfo test) throws HttpResponseException {
+    Table table = createAndCheckTable(create(test), adminAuthHeaders());
+
+    // Add location to the table
+    CreateStorageService createService = new CreateStorageService().withName("s3")
+            .withServiceType(CreateStorageService.StorageServiceType.S3);
+    StorageService service = StorageServiceResourceTest.createService(createService, adminAuthHeaders());
+    CreateLocation create = new CreateLocation().withName(getLocationName(test)).withService(EntityUtil.getEntityReference(service));
+    Location location = createLocation(create, adminAuthHeaders());
+    addAndCheckLocation(table, location.getId(), CREATED, userAuthHeaders());
+    // Delete location and make sure it is deleted
+    deleteAndCheckLocation(table, userAuthHeaders());
+  }
+
+  private void deleteAndCheckLocation(Table table, Map<String, String> authHeaders)
+          throws HttpResponseException {
+    WebTarget target = CatalogApplicationTest.getResource(String.format("tables/%s/location", table.getId()));
+    TestUtils.delete(target, authHeaders);
+    checkLocationDeleted(table.getId(), authHeaders);
+  }
+
+  public static void checkLocationDeleted(UUID tableId, Map<String, String> authHeaders)
+          throws HttpResponseException {
+    Table getTable = getTable(tableId, "location", authHeaders);
+    assertNull(getTable.getLocation());
+  }
+
+  public static void addAndCheckLocation(Table table, UUID locationId, Status status, Map<String, String> authHeaders) throws HttpResponseException {
+    WebTarget target = CatalogApplicationTest.getResource(String.format("tables/%s/location", table.getId()));
+    TestUtils.put(target, locationId.toString(), status, authHeaders);
+
+    // GET .../tables/{tableId} returns newly added follower
+    Table getTable = getTable(table.getId(), "location", authHeaders);
+    TestUtils.validateEntityReference(getTable.getLocation());
+    assertTrue(getTable.getLocation().getId().equals(locationId), "Location added was not found in the table get response");
   }
 
   @Test

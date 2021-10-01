@@ -19,10 +19,12 @@ package org.openmetadata.catalog.jdbi3;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.openmetadata.catalog.Entity;
 import org.openmetadata.catalog.entity.data.Database;
+import org.openmetadata.catalog.entity.data.Location;
 import org.openmetadata.catalog.entity.data.Table;
 import org.openmetadata.catalog.exception.CatalogExceptionMessage;
 import org.openmetadata.catalog.exception.EntityNotFoundException;
 import org.openmetadata.catalog.jdbi3.DatabaseRepository.DatabaseDAO;
+import org.openmetadata.catalog.jdbi3.LocationRepository.LocationDAO;
 import org.openmetadata.catalog.jdbi3.TagRepository.TagDAO;
 import org.openmetadata.catalog.jdbi3.TeamRepository.TeamDAO;
 import org.openmetadata.catalog.jdbi3.UsageRepository.UsageDAO;
@@ -116,6 +118,9 @@ public abstract class TableRepository {
 
   @CreateSqlObject
   abstract TagDAO tagDAO();
+
+  @CreateSqlObject
+  abstract LocationDAO locationDAO();
 
   EntityRepository<Table> entityRepository = new EntityRepository<>() {
     @Override
@@ -234,6 +239,16 @@ public abstract class TableRepository {
   }
 
   @Transaction
+  public Status addLocation(String tableId, String locationId) throws IOException {
+    EntityUtil.validate(tableId, tableDAO().findById(tableId), Table.class);
+    EntityUtil.validate(locationId, locationDAO().findById(locationId), Location.class);
+    // A table has only one location.
+    relationshipDAO().deleteFrom(tableId, Relationship.HAS.ordinal(), Entity.LOCATION);
+    relationshipDAO().insert(tableId, locationId, Entity.TABLE, Entity.LOCATION, Relationship.HAS.ordinal());
+    return Status.CREATED;
+  }
+
+  @Transaction
   public void addJoins(String tableId, TableJoins joins) throws IOException, ParseException {
     // Validate the request content
     Table table = EntityUtil.validate(tableId, tableDAO().findById(tableId), Table.class);
@@ -302,6 +317,11 @@ public abstract class TableRepository {
   public void deleteFollower(String tableId, String userId) {
     EntityUtil.validateUser(userDAO(), userId);
     EntityUtil.removeFollower(relationshipDAO(), tableId, userId);
+  }
+
+  @Transaction
+  public void deleteLocation(String tableId) {
+    relationshipDAO().deleteFrom(tableId, Relationship.HAS.ordinal(), Entity.LOCATION);
   }
 
   @Transaction
@@ -491,7 +511,20 @@ public abstract class TableRepository {
     table.setSampleData(fields.contains("sampleData") ? getSampleData(table) : null);
     table.setViewDefinition(fields.contains("viewDefinition") ? table.getViewDefinition() : null);
     table.setTableProfile(fields.contains("tableProfile") ? getTableProfile(table): null);
+    table.setLocation(fields.contains("location") ? getLocation(table): null);
     return table;
+  }
+
+  private EntityReference getLocation(Table table) throws IOException {
+    // Find database for the table
+    String id = table.getId().toString();
+    List<String> result = relationshipDAO().findTo(id, Relationship.HAS.ordinal(), Entity.LOCATION);
+    if (result.size() == 1) {
+      String locationId= result.get(0);
+      return EntityUtil.getEntityReference(EntityUtil.validate(locationId, locationDAO().findById(locationId), Location.class));
+    } else {
+      return null;
+    }
   }
 
   private EntityReference getOwner(Table table) throws IOException {

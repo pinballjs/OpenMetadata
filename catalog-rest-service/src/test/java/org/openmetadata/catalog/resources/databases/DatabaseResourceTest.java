@@ -24,15 +24,21 @@ import org.junit.jupiter.api.TestInfo;
 import org.openmetadata.catalog.CatalogApplicationTest;
 import org.openmetadata.catalog.Entity;
 import org.openmetadata.catalog.api.data.CreateDatabase;
+import org.openmetadata.catalog.api.data.CreateLocation;
 import org.openmetadata.catalog.api.services.CreateDatabaseService;
 import org.openmetadata.catalog.api.services.CreateDatabaseService.DatabaseServiceType;
+import org.openmetadata.catalog.api.services.CreateStorageService;
 import org.openmetadata.catalog.entity.data.Database;
+import org.openmetadata.catalog.entity.data.Location;
+import org.openmetadata.catalog.entity.data.Table;
 import org.openmetadata.catalog.entity.services.DatabaseService;
+import org.openmetadata.catalog.entity.services.StorageService;
 import org.openmetadata.catalog.entity.teams.Team;
 import org.openmetadata.catalog.entity.teams.User;
 import org.openmetadata.catalog.exception.CatalogExceptionMessage;
 import org.openmetadata.catalog.resources.databases.DatabaseResource.DatabaseList;
 import org.openmetadata.catalog.resources.services.DatabaseServiceResourceTest;
+import org.openmetadata.catalog.resources.services.StorageServiceResourceTest;
 import org.openmetadata.catalog.resources.teams.TeamResourceTest;
 import org.openmetadata.catalog.resources.teams.UserResourceTest;
 import org.openmetadata.catalog.type.EntityReference;
@@ -60,13 +66,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openmetadata.catalog.exception.CatalogExceptionMessage.entityNotFound;
 import static org.openmetadata.catalog.util.TestUtils.UpdateType.MINOR_UPDATE;
 import static org.openmetadata.catalog.util.TestUtils.UpdateType.NO_CHANGE;
+import static org.openmetadata.catalog.exception.CatalogExceptionMessage.readOnlyAttribute;
+import static org.openmetadata.catalog.resources.locations.LocationResourceTest.createLocation;
+import static org.openmetadata.catalog.resources.locations.LocationResourceTest.getLocationName;
 import static org.openmetadata.catalog.util.TestUtils.adminAuthHeaders;
 import static org.openmetadata.catalog.util.TestUtils.assertEntityPagination;
 import static org.openmetadata.catalog.util.TestUtils.assertResponse;
 import static org.openmetadata.catalog.util.TestUtils.authHeaders;
+import static org.openmetadata.catalog.util.TestUtils.userAuthHeaders;
 
 public class DatabaseResourceTest extends CatalogApplicationTest {
   private static final Logger LOG = LoggerFactory.getLogger(DatabaseResourceTest.class);
@@ -299,6 +310,44 @@ public class DatabaseResourceTest extends CatalogApplicationTest {
     // Update database two times successfully with PUT requests
     database = updateAndCheckDatabase(database, request, OK, adminAuthHeaders(), NO_CHANGE);
     updateAndCheckDatabase(database, request, OK, adminAuthHeaders(), NO_CHANGE);
+  }
+
+  @Test
+  public void put_addDeleteLocation_200(TestInfo test) throws HttpResponseException {
+    Database database = createDatabase(create(test), adminAuthHeaders());
+
+    // Add location to the database
+    CreateStorageService createService = new CreateStorageService().withName("s3")
+            .withServiceType(CreateStorageService.StorageServiceType.S3);
+    StorageService service = StorageServiceResourceTest.createService(createService, adminAuthHeaders());
+    CreateLocation create = new CreateLocation().withName(getLocationName(test)).withService(EntityUtil.getEntityReference(service));
+    Location location = createLocation(create, adminAuthHeaders());
+    addAndCheckLocation(database, location.getId(), CREATED, userAuthHeaders());
+    // Delete location and make sure it is deleted
+    deleteAndCheckLocation(database, userAuthHeaders());
+  }
+
+  private void deleteAndCheckLocation(Database database, Map<String, String> authHeaders)
+          throws HttpResponseException {
+    WebTarget target = CatalogApplicationTest.getResource(String.format("databases/%s/location", database.getId()));
+    TestUtils.delete(target, authHeaders);
+    checkLocationDeleted(database.getId(), authHeaders);
+  }
+
+  public static void checkLocationDeleted(UUID databaseId, Map<String, String> authHeaders)
+          throws HttpResponseException {
+    Database getDatabase = getDatabase(databaseId, "location", authHeaders);
+    assertNull(getDatabase.getLocation());
+  }
+
+  public static void addAndCheckLocation(Database database, UUID locationId, Status status, Map<String, String> authHeaders) throws HttpResponseException {
+    WebTarget target = CatalogApplicationTest.getResource(String.format("databases/%s/location", database.getId()));
+    TestUtils.put(target, locationId.toString(), status, authHeaders);
+
+    // GET .../databases/{databaseId} returns newly added follower
+    Database getDatabase = getDatabase(database.getId(), "location", authHeaders);
+    TestUtils.validateEntityReference(getDatabase.getLocation());
+    assertTrue(getDatabase.getLocation().getId().equals(locationId), "Location added was not found in the database get response");
   }
 
   @Test

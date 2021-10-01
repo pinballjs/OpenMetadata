@@ -20,6 +20,7 @@ import org.openmetadata.catalog.api.lineage.AddLineage;
 import org.openmetadata.catalog.jdbi3.ChartRepository.ChartDAO;
 import org.openmetadata.catalog.jdbi3.DashboardRepository.DashboardDAO;
 import org.openmetadata.catalog.jdbi3.DatabaseRepository.DatabaseDAO;
+import org.openmetadata.catalog.jdbi3.LocationRepository.LocationDAO;
 import org.openmetadata.catalog.jdbi3.MetricsRepository.MetricsDAO;
 import org.openmetadata.catalog.jdbi3.ModelRepository.ModelDAO;
 import org.openmetadata.catalog.jdbi3.ReportRepository.ReportDAO;
@@ -78,12 +79,15 @@ public abstract class LineageRepository {
   abstract ModelDAO modelDAO();
 
   @CreateSqlObject
+  abstract LocationDAO locationDAO();
+
+  @CreateSqlObject
   abstract EntityRelationshipDAO relationshipDAO();
 
   @Transaction
   public EntityLineage get(String entityType, String id, int upstreamDepth, int downstreamDepth) throws IOException {
     EntityReference ref = getEntityReference(entityType, UUID.fromString(id), tableDAO(), databaseDAO(),
-            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO());
+            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO(), locationDAO());
     return getLineage(ref, upstreamDepth, downstreamDepth);
   }
 
@@ -91,7 +95,8 @@ public abstract class LineageRepository {
   public EntityLineage getByName(String entityType, String fqn, int upstreamDepth, int downstreamDepth)
           throws IOException {
     EntityReference ref = EntityUtil.getEntityReferenceByName(entityType, fqn, tableDAO(), databaseDAO(),
-            metricsDAO(), reportDAO(), topicDAO(), chartDAO(), dashboardDAO(), taskDAO(), modelDAO(), pipelineDAO());
+            metricsDAO(), reportDAO(), topicDAO(), chartDAO(), dashboardDAO(), taskDAO(), modelDAO(), pipelineDAO(),
+            locationDAO());
     return getLineage(ref, upstreamDepth, downstreamDepth);
   }
 
@@ -100,12 +105,14 @@ public abstract class LineageRepository {
     // Validate from entity
     EntityReference from = addLineage.getEdge().getFromEntity();
     from = EntityUtil.getEntityReference(from.getType(), from.getId(), tableDAO(), databaseDAO(),
-            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO());
+            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO(),
+            locationDAO());
 
     // Validate to entity
     EntityReference to = addLineage.getEdge().getToEntity();
     to = EntityUtil.getEntityReference(to.getType(), to.getId(), tableDAO(), databaseDAO(),
-            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO());
+            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO(),
+            locationDAO());
 
     // Finally, add lineage relationship
     relationshipDAO().insert(from.getId().toString(), to.getId().toString(), from.getType(), to.getType(),
@@ -126,7 +133,7 @@ public abstract class LineageRepository {
     for (int i = 0; i < lineage.getNodes().size(); i++) {
       EntityReference ref = lineage.getNodes().get(i);
       ref = getEntityReference(ref.getType(), ref.getId(), tableDAO(), databaseDAO(), metricsDAO(), dashboardDAO(),
-              reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO());
+              reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO(), locationDAO());
       lineage.getNodes().set(i, ref);
     }
     return lineage;

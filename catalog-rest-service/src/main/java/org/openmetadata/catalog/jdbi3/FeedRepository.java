@@ -30,7 +30,7 @@ import org.openmetadata.catalog.jdbi3.TaskRepository.TaskDAO;
 import org.openmetadata.catalog.jdbi3.TopicRepository.TopicDAO;
 import org.openmetadata.catalog.jdbi3.ModelRepository.ModelDAO;
 import org.openmetadata.catalog.jdbi3.PipelineRepository.PipelineDAO;
-
+import org.openmetadata.catalog.jdbi3.LocationRepository.LocationDAO;
 import org.openmetadata.catalog.resources.feeds.FeedUtil;
 import org.openmetadata.catalog.resources.feeds.MessageParser;
 import org.openmetadata.catalog.resources.feeds.MessageParser.EntityLink;
@@ -95,6 +95,9 @@ public abstract class FeedRepository {
   @CreateSqlObject
   abstract ModelDAO modelDAO();
 
+  @CreateSqlObject
+  abstract LocationDAO locationDAO();
+
   @Transaction
   public Thread create(Thread thread) throws IOException {
     // Validate user creating thread
@@ -104,7 +107,7 @@ public abstract class FeedRepository {
     // Validate about data entity is valid
     EntityLink about = EntityLink.parse(thread.getAbout());
     EntityReference aboutRef = EntityUtil.validateEntityLink(about, userDAO(), teamDAO(), tableDAO(),
-            databaseDAO(), metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), taskDAO(), modelDAO(), pipelineDAO());
+            databaseDAO(), metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), taskDAO(), modelDAO(), pipelineDAO(), locationDAO());
 
     // Get owner for the addressed to Entity
     EntityReference owner = EntityUtil.populateOwner(aboutRef.getId(), relationshipDAO(), userDAO(), teamDAO());
@@ -183,7 +186,7 @@ public abstract class FeedRepository {
       throw new IllegalArgumentException("Only entity links of type <E#/{entityType}/{entityName}> is allowed");
     }
     EntityReference reference = EntityUtil.validateEntityLink(entityLink, userDAO(), teamDAO(), tableDAO(),
-            databaseDAO(), metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), taskDAO(), modelDAO(), pipelineDAO());
+            databaseDAO(), metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), taskDAO(), modelDAO(), pipelineDAO(), locationDAO());
     List<String> threadIds = new ArrayList<>();
     List<List<String>> result = fieldRelationshipDAO().listToByPrefix(entityLink.getFullyQualifiedFieldValue(),
             entityLink.getFullyQualifiedFieldType(), "thread",

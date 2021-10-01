@@ -19,10 +19,12 @@ package org.openmetadata.catalog.jdbi3;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.openmetadata.catalog.Entity;
 import org.openmetadata.catalog.entity.data.Database;
+import org.openmetadata.catalog.entity.data.Location;
 import org.openmetadata.catalog.entity.data.Table;
 import org.openmetadata.catalog.entity.services.DatabaseService;
 import org.openmetadata.catalog.exception.EntityNotFoundException;
 import org.openmetadata.catalog.jdbi3.DatabaseServiceRepository.DatabaseServiceDAO;
+import org.openmetadata.catalog.jdbi3.LocationRepository.LocationDAO;
 import org.openmetadata.catalog.jdbi3.TableRepository.TableDAO;
 import org.openmetadata.catalog.jdbi3.TeamRepository.TeamDAO;
 import org.openmetadata.catalog.jdbi3.UsageRepository.UsageDAO;
@@ -96,6 +98,9 @@ public abstract class DatabaseRepository {
 
   @CreateSqlObject
   abstract UsageDAO usageDAO();
+
+  @CreateSqlObject
+  abstract LocationDAO locationDAO();
 
   @Transaction
   public DatabaseList listAfter(Fields fields, String serviceName, int limitParam, String after) throws IOException,
@@ -269,13 +274,31 @@ public abstract class DatabaseRepository {
     return EntityUtil.validate(id, databaseDAO().findById(id), Database.class);
   }
 
+  @Transaction
+  public void deleteLocation(String databaseId) {
+    relationshipDAO().deleteFrom(databaseId, Relationship.HAS.ordinal(), Entity.LOCATION);
+  }
+
   private Database setFields(Database database, Fields fields) throws IOException {
     database.setOwner(fields.contains("owner") ? getOwner(database) : null);
     database.setTables(fields.contains("tables") ? toEntityReference(getTables(database)) : null);
     database.setService(fields.contains("service") ? getService(database) : null);
     database.setUsageSummary(fields.contains("usageSummary") ? EntityUtil.getLatestUsage(usageDAO(),
             database.getId()) : null);
+    database.setLocation(fields.contains("location") ? getLocation(database): null);
     return database;
+  }
+
+  private EntityReference getLocation(Database database) throws IOException {
+    // Find database for the table
+    String id = database.getId().toString();
+    List<String> result = relationshipDAO().findTo(id, Relationship.HAS.ordinal(), Entity.LOCATION);
+    if (result.size() == 1) {
+      String locationId= result.get(0);
+      return EntityUtil.getEntityReference(EntityUtil.validate(locationId, locationDAO().findById(locationId), Location.class));
+    } else {
+      return null;
+    }
   }
 
   private EntityReference getService(Database database) throws IOException {
@@ -302,6 +325,16 @@ public abstract class DatabaseRepository {
               Entity.DATABASE, Relationship.CONTAINS.ordinal());
       database.setService(service);
     }
+  }
+
+  @Transaction
+  public Status addLocation(String databaseId, String locationId) throws IOException {
+    EntityUtil.validate(databaseId, databaseDAO().findById(databaseId), Database.class);
+    EntityUtil.validate(locationId, locationDAO().findById(locationId), Location.class);
+    // A database has only one location.
+    relationshipDAO().deleteFrom(databaseId, Relationship.HAS.ordinal(), Entity.LOCATION);
+    relationshipDAO().insert(databaseId, locationId, Entity.DATABASE, Entity.LOCATION, Relationship.HAS.ordinal());
+    return Status.CREATED;
   }
 
   public interface DatabaseDAO {

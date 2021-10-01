@@ -24,6 +24,7 @@ import org.openmetadata.catalog.exception.EntityNotFoundException;
 import org.openmetadata.catalog.jdbi3.ChartRepository.ChartDAO;
 import org.openmetadata.catalog.jdbi3.DashboardRepository.DashboardDAO;
 import org.openmetadata.catalog.jdbi3.DatabaseRepository.DatabaseDAO;
+import org.openmetadata.catalog.jdbi3.LocationRepository.LocationDAO;
 import org.openmetadata.catalog.jdbi3.MetricsRepository.MetricsDAO;
 import org.openmetadata.catalog.jdbi3.ModelRepository.ModelDAO;
 import org.openmetadata.catalog.jdbi3.PipelineRepository.PipelineDAO;
@@ -115,6 +116,9 @@ public abstract class TeamRepository {
 
   @CreateSqlObject
   abstract ModelDAO modelDAO();
+
+  @CreateSqlObject
+  abstract LocationDAO locationDAO();
 
   @Transaction
   public Team create(Team team, List<UUID> userIds) throws IOException {
@@ -266,7 +270,7 @@ public abstract class TeamRepository {
   private List<EntityReference> getOwns(String teamId) throws IOException {
     // Compile entities owned by the team
     return EntityUtil.getEntityReference(relationshipDAO().findTo(teamId, OWNS.ordinal()), tableDAO(), databaseDAO(),
-            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO());
+            metricsDAO(), dashboardDAO(), reportDAO(), topicDAO(), chartDAO(), taskDAO(), modelDAO(), pipelineDAO(), locationDAO());
   }
 
   public interface TeamDAO {
