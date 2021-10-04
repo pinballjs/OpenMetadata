@@ -1,0 +1,51 @@
+{
+  "$id": "https://github.com/open-metadata/OpenMetadata/blob/main/catalog-rest-service/src/main/resources/json/schema/api/operations/createDataLakeBucket.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Create a Data Lake bucket",
+  "description": "BYOB, add a bucket to the Data Lake",
+  "type": "object",
+  "definitions": {
+    "accountType": {
+      "javaType": "org.openmetadata.catalog.operations.AccountType",
+      "description": "Type of the AWS account",
+      "type": "string",
+      "enum": [
+        "Live",
+        "Test"
+      ],
+      "javaEnums": [
+        {
+          "name": "Live"
+        },
+        {
+          "name": "Test"
+        }
+      ]
+    }
+  },
+  "properties": {
+    "name": {
+      "description": "Name that identifies the bucket in the form s3://bucket",
+      "type": "string"
+    },
+    "description": {
+      "description": "Description of the table.",
+      "type": "string"
+    },
+    "account": {
+      "type": "object",
+      "javaType": "org.openmetadata.catalog.type.Account",
+      "description": "The AWS account",
+      "properties": {
+        "name": {
+          "description": "The account number",
+          "type": "string"
+        },
+        "accountType": {
+          "$ref": "#/definitions/accountType"
+        }
+      }
+    }
+  },
+  "required": ["name"]
+}

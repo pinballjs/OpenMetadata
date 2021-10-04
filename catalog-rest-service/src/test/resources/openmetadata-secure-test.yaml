@@ -90,6 +90,8 @@ server:
 # Logging settings.
 logging:
   level: INFO
+  loggers:
+    org.skife.jdbi.v2: TRACE
   appenders:
     - type: console
     - type: file
@@ -151,3 +153,8 @@ airflowConfiguration:
   password: "admin"
   metadataApiEndpoint: "http://localhost:8585/api"
   authProvider: "no-auth"
+
+jerseyClient:
+  timeout: 500s
+  connectionTimeout: 500s
+  connectionRequestTimeout: 500s

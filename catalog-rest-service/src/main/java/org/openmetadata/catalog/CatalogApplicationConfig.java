@@ -17,19 +17,34 @@
 package org.openmetadata.catalog;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.Configuration;
+import io.dropwizard.client.JerseyClientConfiguration;
+import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.health.conf.HealthConfiguration;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.openmetadata.catalog.events.EventHandlerConfiguration;
 import org.openmetadata.catalog.ingestion.AirflowConfiguration;
 import org.openmetadata.catalog.security.AuthenticationConfiguration;
 import org.openmetadata.catalog.security.AuthorizerConfiguration;
-import io.dropwizard.Configuration;
-import io.dropwizard.db.DataSourceFactory;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public class CatalogApplicationConfig extends Configuration {
+    @Valid
+    @NotNull
+    private JerseyClientConfiguration jerseyClient = new JerseyClientConfiguration();
+
+    @JsonProperty("jerseyClient")
+    public JerseyClientConfiguration getJerseyClientConfiguration() {
+        return jerseyClient;
+    }
+
+    @JsonProperty("jerseyClient")
+    public void setJerseyClientConfiguration(JerseyClientConfiguration jerseyClient) {
+        this.jerseyClient = jerseyClient;
+    }
+
     @Valid
     @NotNull
     @JsonProperty("database")
