@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.openmetadata.catalog.resources.services;
+package org.openmetadata.catalog.resources.operations;
 
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,30 +35,30 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.Arrays;
 
-@Path("/v1/services")
-@Api(value = "Services collection", tags = "Services collection")
+@Path("/v1/operations")
+@Api(value = "Operations collection", tags = "Operations collection")
 @Produces(MediaType.APPLICATION_JSON)
-@Collection(name = "services")
-public class ServiceResource {
-  private static CollectionList serviceList;
-  public static CollectionList getServiceList(UriInfo uriInfo) {
-    if (serviceList == null) {
-      CollectionDescriptor[] services = CollectionRegistry.getInstance()
-              .getCollectionForPath("/v1/services", uriInfo);
-      serviceList = new CollectionList(Arrays.asList(services));
+@Collection(name = "operations")
+public class OperationResource {
+  private static CollectionList operationList;
+  public static CollectionList getOperationList(UriInfo uriInfo) {
+    if (operationList == null) {
+      CollectionDescriptor[] operations = CollectionRegistry.getInstance()
+              .getCollectionForPath("/v1/operations", uriInfo);
+      operationList = new CollectionList(Arrays.asList(operations));
     }
-    return serviceList;
+    return operationList;
   }
 
   @GET
-  @Operation(summary = "List service collections", tags = "services",
-          description = "Get a list of resources under service collection.",
+  @Operation(summary = "List operation collections", tags = "operations",
+          description = "Get a list of resources under operation collection.",
           responses = {
-                  @ApiResponse(responseCode = "200", description = "List of serviceCollections",
+                  @ApiResponse(responseCode = "200", description = "List of operationCollections",
                           content = @Content(mediaType = "application/json",
-                                  schema = @Schema(implementation = CollectionInfo.class)))
+                          schema = @Schema(implementation = CollectionInfo.class)))
           })
   public CollectionList getCollections(@Context UriInfo uriInfo) {
-    return getServiceList(uriInfo);
+    return getOperationList(uriInfo);
   }
 }

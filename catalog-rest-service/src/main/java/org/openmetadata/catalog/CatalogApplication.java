@@ -20,6 +20,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.health.conf.HealthConfiguration;
 import io.dropwizard.health.core.HealthCheckBundle;
 import io.dropwizard.jdbi3.JdbiFactory;
@@ -27,6 +28,7 @@ import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.jersey.errors.LoggingExceptionMapper;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.lifecycle.ServerLifecycleListener;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -34,12 +36,14 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ServerProperties;
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.statement.SqlLogger;
-import org.jdbi.v3.core.statement.StatementContext;
+import org.openmetadata.catalog.client.OpenMetadataService;
 import org.openmetadata.catalog.events.EventFilter;
 import org.openmetadata.catalog.exception.CatalogGenericExceptionMapper;
 import org.openmetadata.catalog.exception.ConstraintViolationExceptionMapper;
@@ -57,12 +61,12 @@ import org.openmetadata.catalog.security.auth.CatalogSecurityContextRequestFilte
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.time.temporal.ChronoUnit;
 
 /**
  * Main catalog application
@@ -108,6 +112,25 @@ public class CatalogApplication extends Application<CatalogApplicationConfig> {
 
     // Register Event Handler
     registerEventFilter(catalogConfig, environment, jdbi);
+
+    // Register jersey http client
+    final Client client = new JerseyClientBuilder(environment).using(catalogConfig.getJerseyClientConfiguration())
+            .build(getName());
+    environment.jersey().register(new OpenMetadataService(client));
+
+    environment.lifecycle().addServerLifecycleListener(new ServerLifecycleListener() {
+      @Override
+      public void serverStarted(Server server) {
+        for (Connector connector : server.getConnectors()) {
+          if (connector instanceof ServerConnector) {
+            ServerConnector serverConnector = (ServerConnector) connector;
+            if (serverConnector.getName().equals("application")) {
+              OpenMetadataService.port = serverConnector.getLocalPort();
+            }
+          }
+        }
+      }
+    });
   }
 
   @SneakyThrows
