@@ -90,6 +90,8 @@ server:
 # Logging settings.
 logging:
   level: INFO
+  loggers:
+    org.skife.jdbi.v2: TRACE
   appenders:
     - type: console
     - type: file
@@ -143,3 +145,8 @@ authenticationConfiguration:
 eventHandlerConfiguration:
   eventHandlerClassNames:
     - "org.openmetadata.catalog.events.AuditEventHandler"
+
+jerseyClient:
+  timeout: 500s
+  connectionTimeout: 500s
+  connectionRequestTimeout: 500s
