@@ -1088,7 +1088,7 @@ public class TableResourceTest extends CatalogApplicationTest {
     StorageService service = StorageServiceResourceTest.createService(createService, adminAuthHeaders());
     CreateLocation create = new CreateLocation().withName(getLocationName(test)).withService(EntityUtil.getEntityReference(service));
     Location location = createLocation(create, adminAuthHeaders());
-    addAndCheckLocation(table, location.getId(), CREATED, userAuthHeaders());
+    addAndCheckLocation(table, location.getId(), OK, userAuthHeaders());
     // Delete location and make sure it is deleted
     deleteAndCheckLocation(table, userAuthHeaders());
   }

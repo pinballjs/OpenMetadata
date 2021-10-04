@@ -245,7 +245,7 @@ public abstract class TableRepository {
     // A table has only one location.
     relationshipDAO().deleteFrom(tableId, Relationship.HAS.ordinal(), Entity.LOCATION);
     relationshipDAO().insert(tableId, locationId, Entity.TABLE, Entity.LOCATION, Relationship.HAS.ordinal());
-    return Status.CREATED;
+    return Status.OK;
   }
 
   @Transaction

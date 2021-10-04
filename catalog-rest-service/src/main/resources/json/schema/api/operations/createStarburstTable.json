@@ -1,0 +1,90 @@
+{
+  "$id": "https://github.com/open-metadata/OpenMetadata/blob/main/catalog-rest-service/src/main/resources/json/schema/api/operations/createStarburstTable.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Create Table entity request",
+  "description": "Schema corresponding to a table that belongs to a database",
+  "type": "object",
+  "definitions": {
+    "accountType": {
+      "javaType": "org.openmetadata.catalog.operations.AccountType",
+      "description": "Type of the AWS account",
+      "type": "string",
+      "enum": [
+        "Live",
+        "Test"
+      ],
+      "javaEnums": [
+        {
+          "name": "Live"
+        },
+        {
+          "name": "Test"
+        }
+      ]
+    },
+    "tableFormat": {
+      "javaType": "org.openmetadata.catalog.operations.TableFormat",
+      "description": "Table format of the table",
+      "type": "string",
+      "enum": [
+        "json",
+        "delta",
+        "parquet"
+      ],
+      "javaEnums": [
+        {
+          "name": "JSON"
+        },
+        {
+          "name": "DELTA"
+        },
+        {
+          "name": "PARQUET"
+        },
+        {
+          "name": "ORC"
+        }
+      ]
+    }
+  },
+  "properties": {
+    "name": {
+      "description": "Name that identifies the this table in the form of cluster.catalog.schema.table like fermi.hive.event_core.adtech_ccp_runners_ad01",
+      "type": "string"
+    },
+    "tableFormat": {
+      "$ref": "#/definitions/tableFormat"
+    },
+    "location": {
+      "description": "Location of the table in S3",
+      "type": "string"
+    },
+    "description": {
+      "description": "Description of the table.",
+      "type": "string"
+    },
+    "columns": {
+      "description": "Columns of the table. It can be null for Parquet and Delta format.",
+      "type": "array",
+      "items": {
+        "$ref": "../../entity/data/table.json#/definitions/column"
+      },
+      "default" : null
+    },
+    "account": {
+      "type": "object",
+      "javaType": "org.openmetadata.catalog.type.Account",
+      "description": "The AWS account",
+      "properties": {
+        "name": {
+          "description": "The account number",
+          "type": "string"
+        },
+        "accountType": {
+          "$ref": "#/definitions/accountType"
+        }
+      }
+    }
+  },
+  "required": ["name","tableFormat","location"]
+}
