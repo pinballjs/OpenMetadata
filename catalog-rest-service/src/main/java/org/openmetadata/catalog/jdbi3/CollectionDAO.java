@@ -21,6 +21,7 @@ import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.sqlobject.CreateSqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.customizer.Define;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.openmetadata.catalog.entity.Bots;
@@ -574,6 +575,37 @@ public interface CollectionDAO {
     default EntityReference getEntityReference(Location entity) {
       return new LocationEntityInterface(entity).getEntityReference();
     }
+
+    @SqlQuery("SELECT count(*) FROM <table> WHERE " +
+            "(<nameColumn> LIKE CONCAT(:fqnPrefix, '%') OR :fqnPrefix IS NULL)")
+    int listCount(@Define("table") String table, @Define("nameColumn") String nameColumn,
+                  @Bind("fqnPrefix") String fqnPrefix);
+
+    @SqlQuery(
+            "SELECT json FROM (" +
+                    "SELECT <nameColumn>, json FROM <table> WHERE " +
+                    "(<nameColumn> LIKE CONCAT(:fqnPrefix, '%') OR :fqnPrefix IS NULL) AND " +// Filter by
+                    // service name
+                    "<nameColumn> < :before " + // Pagination by chart fullyQualifiedName
+                    "ORDER BY <nameColumn> DESC " + // Pagination ordering by chart fullyQualifiedName
+                    "LIMIT :limit" +
+                    ") last_rows_subquery ORDER BY <nameColumn>")
+    List<String> listBefore(@Define("table") String table,
+                            @Define("nameColumn") String nameColumn,
+                            @Bind("fqnPrefix") String fqnPrefix,
+                            @Bind("limit") int limit,
+                            @Bind("before") String before);
+
+    @SqlQuery("SELECT json FROM <table> WHERE " +
+            "(<nameColumn> LIKE CONCAT(:fqnPrefix, '%') OR :fqnPrefix IS NULL) AND " +
+            "<nameColumn> > :after " +
+            "ORDER BY <nameColumn> " +
+            "LIMIT :limit")
+    List<String> listAfter(@Define("table") String table,
+                           @Define("nameColumn") String nameColumn,
+                           @Bind("fqnPrefix") String fqnPrefix,
+                           @Bind("limit") int limit,
+                           @Bind("after") String after);
   }
 
   @RegisterRowMapper(TagLabelMapper.class)

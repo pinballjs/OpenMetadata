@@ -44,7 +44,6 @@ import org.openmetadata.common.utils.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.net.URI;
@@ -62,7 +61,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.openmetadata.catalog.jdbi3.Relationship.JOINED_WITH;
 import static org.openmetadata.common.utils.CommonUtil.parseDate;
 
@@ -195,7 +194,7 @@ public class TableRepository extends EntityRepository<Table> {
     // A table has only one location.
     dao.relationshipDAO().deleteFrom(tableId.toString(), Relationship.HAS.ordinal(), Entity.LOCATION);
     dao.relationshipDAO().insert(tableId.toString(), locationId.toString(), Entity.DATABASE, Entity.LOCATION, Relationship.HAS.ordinal());
-    return CREATED;
+    return OK;
   }
 
   @Transaction
