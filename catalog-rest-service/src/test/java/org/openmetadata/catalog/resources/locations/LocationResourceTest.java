@@ -112,6 +112,20 @@ public class LocationResourceTest extends CatalogApplicationTest {
     }
 
     @Test
+    public void get_locationListWithPrefix_2xx(TestInfo test) throws HttpResponseException {
+        // Create a large number of locations
+        int maxLocations = 40;
+        for (int i = 0; i < maxLocations; i++) {
+            createLocation(create(test, "/Kokl/", i), adminAuthHeaders());
+        }
+
+        // List all locations
+        LocationList allLocations = listLocations(null, "s3://Kokl/location2", 1000000, null,
+                null, adminAuthHeaders());
+        assertEquals(11, allLocations.getData().size(), "Wrong number of location under the same prefix");
+    }
+
+    @Test
     public void post_locationAlreadyExists_409_conflict(TestInfo test) throws HttpResponseException {
         CreateLocation create = create(test);
         createLocation(create, adminAuthHeaders());
@@ -715,6 +729,10 @@ public class LocationResourceTest extends CatalogApplicationTest {
 
     public static CreateLocation create(TestInfo test, int index) {
         return new CreateLocation().withName(getLocationName(test, index)).withService(AWS_REFERENCE);
+    }
+
+    public static CreateLocation create(TestInfo test, String prefix, int index) {
+        return new CreateLocation().withName(prefix + getLocationName(test, index)).withService(AWS_REFERENCE);
     }
 
     public static void addAndCheckFollower(Location location, UUID userId, Status status, int totalFollowerCount,
