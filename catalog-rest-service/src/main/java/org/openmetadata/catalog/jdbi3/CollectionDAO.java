@@ -21,6 +21,7 @@ import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.sqlobject.CreateSqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.customizer.Define;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.openmetadata.catalog.entity.Bots;
@@ -597,6 +598,46 @@ public interface CollectionDAO {
     default EntityReference getEntityReference(Location entity) {
       return new LocationEntityInterface(entity).getEntityReference();
     }
+
+    @SqlQuery("SELECT count(*) FROM <table> WHERE " +
+                    "LEFT(:fqn, LENGTH(<nameColumn>)) = <nameColumn> AND " +
+                    "<nameColumn> >= CONCAT(:service, '://') AND " +
+                    "<nameColumn> <= :fqn")
+    int listPrefixesCount(@Define("table") String table,
+                          @Define("nameColumn") String nameColumn,
+                          @Bind("fqn") String fqn,
+                          @Bind("service") String service);
+
+    @SqlQuery(
+            "SELECT json FROM (" +
+                    "SELECT <nameColumn>, json FROM <table> WHERE " +
+                    "LEFT(:fqn, LENGTH(<nameColumn>)) = <nameColumn> AND " +
+                    "<nameColumn> >= CONCAT(:service, '://') AND " +
+                    "<nameColumn> <= :fqn AND " +
+                    "<nameColumn> < :before " +
+                    "ORDER BY <nameColumn> DESC " + // Pagination ordering by chart fullyQualifiedName
+                    "LIMIT :limit" +
+                    ") last_rows_subquery ORDER BY <nameColumn>")
+    List<String> listPrefixesBefore(@Define("table") String table,
+                           @Define("nameColumn") String nameColumn,
+                           @Bind("fqn") String fqn,
+                           @Bind("service") String service,
+                           @Bind("limit") int limit,
+                           @Bind("before") String before);
+
+    @SqlQuery("SELECT json FROM <table> WHERE " +
+            "LEFT(:fqn, LENGTH(<nameColumn>)) = <nameColumn> AND " +
+            "<nameColumn> >= CONCAT(:service, '://') AND " +
+            "<nameColumn> <= :fqn AND " +
+            "<nameColumn> > :after " +
+            "ORDER BY <nameColumn> " +
+            "LIMIT :limit")
+    List<String> listPrefixesAfter(@Define("table") String table,
+                           @Define("nameColumn") String nameColumn,
+                           @Bind("fqn") String fqn,
+                           @Bind("service") String service,
+                           @Bind("limit") int limit,
+                           @Bind("after") String after);
   }
 
   @RegisterRowMapper(TagLabelMapper.class)

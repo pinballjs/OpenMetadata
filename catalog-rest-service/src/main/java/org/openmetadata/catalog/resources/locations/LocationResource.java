@@ -164,6 +164,50 @@ public class LocationResource {
     }
 
     @GET
+    @Path("prefixes/{fqn}")
+    @Operation(summary = "List locations that are prefixes", tags = "locations",
+            description = "Get a list of locations. Use `fields` parameter to get only necessary fields. " +
+                    "Use cursor-based pagination to limit the number entries in the list using `limit` and `before` " +
+                    "or `after` query params.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "List of ancestor locations",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = LocationList.class)))
+            })
+    public ResultList<Location> listPrefixes(@Context UriInfo uriInfo,
+                                     @Context SecurityContext securityContext,
+                                     @Parameter(description = "Fully qualified name of the location", schema = @Schema(type = "string"))
+                                     @PathParam("fqn") String fqn,
+                                     @Parameter(description = "Fields requested in the returned resource",
+                                             schema = @Schema(type = "string", example = FIELDS))
+                                     @QueryParam("fields") String fieldsParam,
+                                     @Parameter(description = "Limit the number locations returned. " +
+                                             "(1 to 1000000, default = 10)")
+                                     @DefaultValue("10")
+                                     @Min(1)
+                                     @Max(1000000)
+                                     @QueryParam("limit") int limitParam,
+                                     @Parameter(description = "Returns list of locations before this cursor",
+                                             schema = @Schema(type = "string"))
+                                     @QueryParam("before") String before,
+                                     @Parameter(description = "Returns list of locations after this cursor",
+                                             schema = @Schema(type = "string"))
+                                     @QueryParam("after") String after
+    ) throws IOException, GeneralSecurityException, ParseException {
+        RestUtil.validateCursors(before, after);
+        Fields fields = new Fields(FIELD_LIST, fieldsParam);
+
+        ResultList<Location> locations;
+        if (before != null) { // Reverse paging
+            locations = dao.listPrefixesBefore(fields, fqn, limitParam, before); // Ask for one extra entry
+        } else { // Forward paging or first page
+            locations = dao.listPrefixesAfter(fields, fqn, limitParam, after);
+        }
+        locations.getData().forEach(l -> addHref(uriInfo, l));
+        return locations;
+    }
+
+    @GET
     @Path("/{id}/versions")
     @Operation(summary = "List location versions", tags = "locations",
             description = "Get a list of all the versions of a location identified by `id`",
