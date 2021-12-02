@@ -9,7 +9,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-name: Maven CI
+name: Amiorin Maven CI
 
 on: workflow_dispatch
 
