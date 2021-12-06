@@ -80,3 +80,6 @@ ingestion/src/metadata/generated/**
 # MLFlow
 mlruns/
 /ingestion/tests/integration/mlflow/tests/db/
+
+# setup.py should replace requirements.txt
+requirements.txt
