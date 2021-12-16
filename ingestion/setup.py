@@ -33,6 +33,7 @@ def get_long_description():
 
 
 base_requirements = {
+    "openmetadata-ingestion-generated @ git+https://github.com/amiorin/OpenMetadata@ISSUE-1670#egg=openmetadata-ingestion-generated&subdirectory=ingestion-generated",
     "commonregex",
     "idna<3,>=2.5",
     "click>=7.1.1",
