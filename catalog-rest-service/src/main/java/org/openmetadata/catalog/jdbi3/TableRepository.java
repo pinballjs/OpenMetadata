@@ -607,7 +607,7 @@ public class TableRepository extends EntityRepository<Table> {
         boolean foundDate = false;
         for (DailyCount d :
             dailyCountList) { // If the date already exists, update the count. Otherwise, add a new
-                              // entry
+          // entry
           if (d.getDate().equals(dailyCount.getDate())) {
             // Entry for date already exists. Update the count
             d.setCount(dailyCount.getCount());
