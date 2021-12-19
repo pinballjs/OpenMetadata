@@ -32,7 +32,8 @@ import org.slf4j.LoggerFactory;
 public class EventFilter implements ContainerResponseFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(EventFilter.class);
-  private static final List<String> AUDITABLE_METHODS = Arrays.asList("POST", "PUT", "PATCH", "DELETE");
+  private static final List<String> AUDITABLE_METHODS =
+      Arrays.asList("POST", "PUT", "PATCH", "DELETE");
   private static final int FORK_JOIN_POOL_PARALLELISM = 20;
   private final ForkJoinPool forkJoinPool;
   private final List<EventHandler> eventHandlers;
@@ -45,10 +46,13 @@ public class EventFilter implements ContainerResponseFilter {
 
   private void registerEventHandlers(CatalogApplicationConfig config, Jdbi jdbi) {
     try {
-      Set<String> eventHandlerClassNames = config.getEventHandlerConfiguration().getEventHandlerClassNames();
+      Set<String> eventHandlerClassNames =
+          config.getEventHandlerConfiguration().getEventHandlerClassNames();
       for (String eventHandlerClassName : eventHandlerClassNames) {
         EventHandler eventHandler =
-            ((Class<EventHandler>) Class.forName(eventHandlerClassName)).getConstructor().newInstance();
+            ((Class<EventHandler>) Class.forName(eventHandlerClassName))
+                .getConstructor()
+                .newInstance();
         eventHandler.init(config, jdbi);
         eventHandlers.add(eventHandler);
       }
@@ -58,7 +62,8 @@ public class EventFilter implements ContainerResponseFilter {
   }
 
   @Override
-  public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+  public void filter(
+      ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
 
     int responseCode = responseContext.getStatus();
     String method = requestContext.getMethod();
@@ -66,10 +71,10 @@ public class EventFilter implements ContainerResponseFilter {
       return;
     }
 
-    eventHandlers
-        .parallelStream()
+    eventHandlers.parallelStream()
         .forEach(
             eventHandler ->
-                ParallelStreamUtil.runAsync(() -> eventHandler.process(requestContext, responseContext), forkJoinPool));
+                ParallelStreamUtil.runAsync(
+                    () -> eventHandler.process(requestContext, responseContext), forkJoinPool));
   }
 }

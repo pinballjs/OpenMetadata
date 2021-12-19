@@ -50,7 +50,8 @@ public abstract class CatalogApplicationTest {
   }
 
   public static WebTarget getOperationsResource(String collection) {
-    String targetURI = "http://localhost:" + APP.getLocalPort() + "/api/operations/v1/" + collection;
+    String targetURI =
+        "http://localhost:" + APP.getLocalPort() + "/api/operations/v1/" + collection;
     return APP.client().target(targetURI);
   }
 }

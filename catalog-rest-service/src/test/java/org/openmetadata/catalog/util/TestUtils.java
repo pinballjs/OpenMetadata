@@ -118,14 +118,16 @@ public final class TestUtils {
     throw new HttpResponseException(error.getInt("code"), error.getString("message"));
   }
 
-  public static void readResponse(Response response, int expectedResponse) throws HttpResponseException {
+  public static void readResponse(Response response, int expectedResponse)
+      throws HttpResponseException {
     if (!HttpStatus.isSuccess(response.getStatus())) {
       readResponseError(response);
     }
     assertEquals(expectedResponse, response.getStatus());
   }
 
-  public static <T> T readResponse(Response response, Class<T> clz, int expectedResponse) throws HttpResponseException {
+  public static <T> T readResponse(Response response, Class<T> clz, int expectedResponse)
+      throws HttpResponseException {
     if (!HttpStatus.isSuccess(response.getStatus())) {
       readResponseError(response);
     }
@@ -133,7 +135,8 @@ public final class TestUtils {
     return response.readEntity(clz);
   }
 
-  public static void assertResponse(Executable executable, Response.Status expectedStatus, String expectedReason) {
+  public static void assertResponse(
+      Executable executable, Response.Status expectedStatus, String expectedReason) {
     HttpResponseException exception = assertThrows(HttpResponseException.class, executable);
     assertEquals(expectedStatus.getStatusCode(), exception.getStatusCode());
     assertEquals(expectedReason, exception.getReasonPhrase());
@@ -148,7 +151,8 @@ public final class TestUtils {
         expectedReason + " not in actual " + exception.getReasonPhrase());
   }
 
-  public static void assertResponse(HttpResponseException exception, Status expectedCode, String expectedReason) {
+  public static void assertResponse(
+      HttpResponseException exception, Status expectedCode, String expectedReason) {
     assertEquals(expectedCode.getStatusCode(), exception.getStatusCode());
     assertEquals(expectedReason, exception.getReasonPhrase());
   }
@@ -161,7 +165,8 @@ public final class TestUtils {
         expectedReason + " not in actual " + exception.getReasonPhrase());
   }
 
-  public static <T> void assertEntityPagination(List<T> allEntities, ResultList<T> actual, int limit, int offset) {
+  public static <T> void assertEntityPagination(
+      List<T> allEntities, ResultList<T> actual, int limit, int offset) {
     assertFalse(actual.getData().isEmpty());
     if (actual.getPaging().getAfter() != null && actual.getPaging().getBefore() != null) {
       // Last page may have less than limit number of records
@@ -174,54 +179,71 @@ public final class TestUtils {
     assertEquals(allEntities.size(), actual.getPaging().getTotal());
   }
 
-  public static void post(WebTarget target, Map<String, String> headers) throws HttpResponseException {
+  public static void post(WebTarget target, Map<String, String> headers)
+      throws HttpResponseException {
     Response response = addHeaders(target, headers).post(null);
     readResponse(response, Status.CREATED.getStatusCode());
   }
 
-  public static <K> void post(WebTarget target, K request, Map<String, String> headers) throws HttpResponseException {
-    Response response = addHeaders(target, headers).post(Entity.entity(request, MediaType.APPLICATION_JSON));
+  public static <K> void post(WebTarget target, K request, Map<String, String> headers)
+      throws HttpResponseException {
+    Response response =
+        addHeaders(target, headers).post(Entity.entity(request, MediaType.APPLICATION_JSON));
     readResponse(response, Status.CREATED.getStatusCode());
   }
 
-  public static <T, K> T post(WebTarget target, K request, Class<T> clz, Map<String, String> headers)
+  public static <T, K> T post(
+      WebTarget target, K request, Class<T> clz, Map<String, String> headers)
       throws HttpResponseException {
-    Response response = addHeaders(target, headers).post(Entity.entity(request, MediaType.APPLICATION_JSON));
+    Response response =
+        addHeaders(target, headers).post(Entity.entity(request, MediaType.APPLICATION_JSON));
     return readResponse(response, clz, Status.CREATED.getStatusCode());
   }
 
-  public static <T> T patch(WebTarget target, JsonPatch patch, Class<T> clz, Map<String, String> headers)
+  public static <T> T patch(
+      WebTarget target, JsonPatch patch, Class<T> clz, Map<String, String> headers)
       throws HttpResponseException {
     Response response =
         addHeaders(target, headers)
-            .method("PATCH", Entity.entity(patch.toJsonArray().toString(), MediaType.APPLICATION_JSON_PATCH_JSON_TYPE));
+            .method(
+                "PATCH",
+                Entity.entity(
+                    patch.toJsonArray().toString(), MediaType.APPLICATION_JSON_PATCH_JSON_TYPE));
     return readResponse(response, clz, Status.OK.getStatusCode());
   }
 
-  public static <K> void put(WebTarget target, K request, Status expectedStatus, Map<String, String> headers)
+  public static <K> void put(
+      WebTarget target, K request, Status expectedStatus, Map<String, String> headers)
       throws HttpResponseException {
-    Response response = addHeaders(target, headers).method("PUT", Entity.entity(request, MediaType.APPLICATION_JSON));
+    Response response =
+        addHeaders(target, headers)
+            .method("PUT", Entity.entity(request, MediaType.APPLICATION_JSON));
     readResponse(response, expectedStatus.getStatusCode());
   }
 
   public static <T, K> T put(
       WebTarget target, K request, Class<T> clz, Status expectedStatus, Map<String, String> headers)
       throws HttpResponseException {
-    Response response = addHeaders(target, headers).method("PUT", Entity.entity(request, MediaType.APPLICATION_JSON));
+    Response response =
+        addHeaders(target, headers)
+            .method("PUT", Entity.entity(request, MediaType.APPLICATION_JSON));
     return readResponse(response, clz, expectedStatus.getStatusCode());
   }
 
-  public static <T> T get(WebTarget target, Class<T> clz, Map<String, String> headers) throws HttpResponseException {
+  public static <T> T get(WebTarget target, Class<T> clz, Map<String, String> headers)
+      throws HttpResponseException {
     final Response response = addHeaders(target, headers).get();
     return readResponse(response, clz, Status.OK.getStatusCode());
   }
 
-  public static <T> T delete(WebTarget target, Class<T> clz, Map<String, String> headers) throws HttpResponseException {
+  public static <T> T delete(WebTarget target, Class<T> clz, Map<String, String> headers)
+      throws HttpResponseException {
     final Response response = addHeaders(target, headers).delete();
     return readResponse(response, clz, Status.OK.getStatusCode());
   }
 
-  public static void delete(WebTarget target, Map<String, String> headers) throws HttpResponseException {
+  public static void delete(WebTarget target, Map<String, String> headers)
+      throws HttpResponseException {
     final Response response = addHeaders(target, headers).delete();
     if (!HttpStatus.isSuccess(response.getStatus())) {
       readResponseError(response);
@@ -235,15 +257,27 @@ public final class TestUtils {
     assertNotNull(ref.getName());
     assertNotNull(ref.getType());
     // Ensure data entities use fully qualified name
-    if (List.of("table", "database", "metrics", "dashboard", "pipeline", "report", "topic", "chart", "location")
+    if (List.of(
+            "table",
+            "database",
+            "metrics",
+            "dashboard",
+            "pipeline",
+            "report",
+            "topic",
+            "chart",
+            "location")
         .contains(ref.getType())) {
       // FullyQualifiedName has "." as separator
-      assertTrue(ref.getName().contains("."), "entity name is not fully qualified - " + ref.getName());
+      assertTrue(
+          ref.getName().contains("."), "entity name is not fully qualified - " + ref.getName());
     }
   }
 
   public static void validateEntityReference(List<EntityReference> list) {
-    Optional.ofNullable(list).orElse(Collections.emptyList()).forEach(TestUtils::validateEntityReference);
+    Optional.ofNullable(list)
+        .orElse(Collections.emptyList())
+        .forEach(TestUtils::validateEntityReference);
   }
 
   public static Map<String, String> authHeaders(String username) {
@@ -254,18 +288,21 @@ public final class TestUtils {
     return headers;
   }
 
-  public static void validateTags(List<TagLabel> expectedList, List<TagLabel> actualList) throws HttpResponseException {
+  public static void validateTags(List<TagLabel> expectedList, List<TagLabel> actualList)
+      throws HttpResponseException {
     if (expectedList == null) {
       return;
     }
     actualList = Optional.ofNullable(actualList).orElse(Collections.emptyList());
-    // When tags from the expected list is added to an entity, the derived tags for those tags are automatically added
+    // When tags from the expected list is added to an entity, the derived tags for those tags are
+    // automatically added
     // So add to the expectedList, the derived tags before validating the tags
     List<TagLabel> updatedExpectedList = new ArrayList<>(expectedList);
     for (TagLabel expected : expectedList) {
       Tag tag = TagResourceTest.getTag(expected.getTagFQN(), adminAuthHeaders());
       List<TagLabel> derived = new ArrayList<>();
-      for (String fqn : Optional.ofNullable(tag.getAssociatedTags()).orElse(Collections.emptyList())) {
+      for (String fqn :
+          Optional.ofNullable(tag.getAssociatedTags()).orElse(Collections.emptyList())) {
         Tag associatedTag = TagResourceTest.getTag(fqn, adminAuthHeaders());
         derived.add(
             new TagLabel()
@@ -303,24 +340,29 @@ public final class TestUtils {
     if (authHeaders == null) {
       return null;
     }
-    String principal = authHeaders.get(CatalogOpenIdAuthorizationRequestFilter.X_AUTH_PARAMS_EMAIL_HEADER);
+    String principal =
+        authHeaders.get(CatalogOpenIdAuthorizationRequestFilter.X_AUTH_PARAMS_EMAIL_HEADER);
     return principal == null ? null : principal.split("@")[0];
   }
 
   // TODO remove this
-  public static void validateUpdate(Double previousVersion, Double newVersion, UpdateType updateType) {
+  public static void validateUpdate(
+      Double previousVersion, Double newVersion, UpdateType updateType) {
     if (updateType == UpdateType.CREATED) {
       assertEquals(0.1, newVersion); // New version of entity created
     } else if (updateType == UpdateType.NO_CHANGE) {
       assertEquals(previousVersion, newVersion); // No change in the version
     } else if (updateType == UpdateType.MINOR_UPDATE) {
-      assertEquals(Math.round((previousVersion + 0.1) * 10.0) / 10.0, newVersion); // Minor version change
+      assertEquals(
+          Math.round((previousVersion + 0.1) * 10.0) / 10.0, newVersion); // Minor version change
     } else if (updateType == UpdateType.MAJOR_UPDATE) {
-      assertEquals(Math.round((previousVersion + 1.0) * 10.0) / 10.0, newVersion); // Major version change
+      assertEquals(
+          Math.round((previousVersion + 1.0) * 10.0) / 10.0, newVersion); // Major version change
     }
   }
 
-  public static void existsInEntityReferenceList(List<EntityReference> list, UUID id, boolean expectedExistsInList) {
+  public static void existsInEntityReferenceList(
+      List<EntityReference> list, UUID id, boolean expectedExistsInList) {
     boolean exists = false;
     for (EntityReference ref : list) {
       validateEntityReference(ref);
@@ -330,7 +372,9 @@ public final class TestUtils {
       }
     }
     assertEquals(
-        expectedExistsInList, exists, "Entry exists in list - expected:" + expectedExistsInList + " actual:" + exists);
+        expectedExistsInList,
+        exists,
+        "Entry exists in list - expected:" + expectedExistsInList + " actual:" + exists);
   }
 
   public static void assertListNull(Object... values) {
