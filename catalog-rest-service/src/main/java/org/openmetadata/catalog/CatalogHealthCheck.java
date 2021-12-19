@@ -14,9 +14,11 @@
 package org.openmetadata.catalog;
 
 import static org.openmetadata.catalog.resources.teams.UserResource.FIELD_LIST;
+
 import static org.openmetadata.catalog.resources.teams.UserResource.LOG;
 
 import com.codahale.metrics.health.HealthCheck;
+
 import java.io.IOException;
 import org.jdbi.v3.core.Jdbi;
 import org.openmetadata.catalog.jdbi3.CollectionDAO;
